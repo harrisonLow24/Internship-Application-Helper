@@ -3,5 +3,7 @@
  
  ## Google Sheets Format:
  Column 1: Company
+ 
  Column 2: Role
+ 
  Column 3: Location

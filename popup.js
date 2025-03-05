@@ -1,17 +1,52 @@
+// // load saved data when popup is opened
+// document.addEventListener('DOMContentLoaded', () => {
+//   console.log("loading saved input...");
+//   chrome.storage.local.get(['sheetLink'], (data) => {
+//     if (data.sheetLink) {
+//       document.getElementById('sheetLink').value = data.sheetLink;
+//     }
+//   });
+// });
+
+// // save sheet link before closing the popup
+// window.onbeforeunload = () => {
+//   const sheetLink = document.getElementById('sheetLink').value.trim();
+//   console.log('saving input: ', sheetLink);
+//   chrome.storage.local.set({
+//     sheetLink: sheetLink,
+//   });
+// };
+
 document.getElementById("highlightButton").addEventListener("click", () => {
+  const sheetLink = document.getElementById('sheetLink').value.trim();
+  const errorMessage = document.getElementById('errorMessage');
+
+  // check for valid sheet link
+  if (!sheetLink) {
+    errorMessage.textContent = "Please fill in the sheet link.";
+    return;
+  }
+
+  errorMessage.textContent = ""; // clear error message if input is valid
+
+  const sheetId = sheetLink.match(/\/d\/(.*?)\//);
+  if (!sheetId) {
+    errorMessage.textContent = "Invalid Google Sheets URL.";
+    return;
+  }
+  
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId[1]}/gviz/tq?tqx=out:csv`;
+
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       chrome.scripting.executeScript({
           target: { tabId: tabs[0].id },
-          function: highlightInternships
+          function: highlightInternships,
+          args: [url]
       });
   });
 });
 
-async function highlightInternships() {
-  const sheetId = ""; // ENTER YOUR LINK HERE: section in between /d/ and before /edit
-  const sheetName = ""; // ENTER GOOGLE SHEETS NAME HERE
-  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-
+async function highlightInternships(url) {
   try {
       const response = await fetch(url);
       if (!response.ok) throw new Error(`failed to fetch data: ${response.statusText}`);
@@ -26,7 +61,7 @@ async function highlightInternships() {
           return cleanRow.map(cell => cell.trim());
         })
         .filter(row => row.length >= 3);
-      
+	      
       // debug: log parsed rows
       console.log("Parsed Rows:", rows);
       
@@ -39,7 +74,7 @@ async function highlightInternships() {
             return `${companyName}|${role}|${location}`; // combine company, role, and location
           })
       );
-      
+     
       // debug: log applied internships
       console.log("Applied Internships:", appliedInternships);
       
@@ -74,10 +109,10 @@ async function highlightInternships() {
             }
 
             const key = `${companyName}|${role}|${location}`; // combine company, role, and location for lookup
-            
+			
             // debug logging
             console.log(`Checking: Company - ${companyName}, Role - ${role}, Location - ${location}, Key: ${key}`);
-            
+         
             if (appliedInternships.has(key)) {
                 row.style.backgroundColor = "green"; // applied
                 row.title = "Applied";

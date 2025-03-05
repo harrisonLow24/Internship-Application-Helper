@@ -3,7 +3,11 @@
   "name": "Internship Application Helper",
   "version": "1.0",
   "description": "Highlights internship opportunities based on whether you've applied.",
-  "permissions": ["scripting", "activeTab"],
+  "permissions": [ 
+    "storage", 
+    "scripting", 
+    "activeTab"
+  ],
   "host_permissions": ["https://docs.google.com/spreadsheets/*"],
   "background": {
     "service_worker": "background.js"
